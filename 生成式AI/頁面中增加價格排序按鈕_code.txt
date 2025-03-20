@@ -1,0 +1,145 @@
+# urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', views.homepage, name='homepage'), # 首页：产品类型
+    path('products/<int:type_id>/', views.product_list, name='product_list'), # 次页：产品列表
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'), # 次页：产品详情
+] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+
+#####################################################
+# views.py
+from django.shortcuts import get_object_or_404, render
+from .models import Product, ProductType
+
+def product_list(request, type_id):
+    product_type = get_object_or_404(ProductType, id=type_id)
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
+    
+    if sort_by == 'price':
+        if order == 'asc':
+            products = Product.objects.filter(type=product_type).order_by('price')
+        else:
+            products = Product.objects.filter(type=product_type).order_by('-price')
+    else:
+        if order == 'asc':
+            products = Product.objects.filter(type=product_type).order_by('name')
+        else:
+            products = Product.objects.filter(type=product_type).order_by('-name')
+
+    return render(request, 'product_list.html', {'product_type': product_type, 'products': products, 'view_name': 'product_list', 'sort_by': sort_by, 'order': order})
+
+#####################################################
+# product_list.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product_type.type_name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'homepage' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Product List</li>
+        </ol>
+    </nav>
+    
+    <h1 class="mb-4">Products in {{ product_type.type_name }}</h1>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="?sort_by=name&order=asc" class="btn btn-outline-primary">Name ↑</a>
+                <a href="?sort_by=name&order=desc" class="btn btn-outline-primary">Name ↓</a>
+                <a href="?sort_by=price&order=asc" class="btn btn-outline-primary">Price ↑</a>
+                <a href="?sort_by=price&order=desc" class="btn btn-outline-primary">Price ↓</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    {% if product.productimage_set.exists %}
+                        <img src="/static/images/{{ product.productimage_set.first.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text">{{ product.description }}</p>
+                        <p class="card-text">Price: ${{ product.price }}</p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'homepage' %}" class="btn btn-secondary">Back to Homepage</a>
+</div>
+</body>
+</html>
+
+#####################################################
+# 更新 product_list.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product_type.type_name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'homepage' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Product List</li>
+        </ol>
+    </nav>
+    
+    <h1 class="mb-4">Products in {{ product_type.type_name }}</h1>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="?sort_by=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-outline-primary">
+                    Name {% if sort_by == 'name' and order == 'asc' %}↑{% elif sort_by == 'name' and order == 'desc' %}↓{% endif %}
+                </a>
+                <a href="?sort_by=price&order={% if sort_by == 'price' and order == 'asc' %}desc{% else %}asc{% endif %}" class="btn btn-outline-primary">
+                    Price {% if sort_by == 'price' and order == 'asc' %}↑{% elif sort_by == 'price' and order == 'desc' %}↓{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    {% if product.productimage_set.exists %}
+                        <img src="/static/images/{{ product.productimage_set.first.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text">{{ product.description }}</p>
+                        <p class="card-text">Price: ${{ product.price }}</p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'homepage' %}" class="btn btn-secondary">Back to Homepage</a>
+</div>
+</body>
+</html>
+
+

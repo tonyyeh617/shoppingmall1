@@ -1,0 +1,133 @@
+from django.db import models
+
+# 產品類型
+class ProductType(models.Model):
+    type_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.type_name
+
+# 顏色
+class Color(models.Model):
+    color_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.color_name
+
+# 尺寸
+class Size(models.Model):
+    size_name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.size_name
+
+# 產品
+class Product(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+# 產品圖片
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    image_url = models.URLField()
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
+
+# 庫存
+class Inventory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+
+    def __str__(self):
+        return f"Inventory for {self.product.name} - {self.color.color_name} - {self.size.size_name}"
+
+
+
+========================================================================================================
+
+
+# pip install Faker
+
+
+from django.core.management.base import BaseCommand
+from faker import Faker
+from myapp.models import Product, ProductType, Color, Size, ProductImage, Inventory
+
+class Command(BaseCommand):
+    help = 'Generate fake product data'
+
+    def handle(self, *args, **kwargs):
+        fake = Faker()
+
+        # Create fake product types
+        product_types = ['Electronics', 'Clothing', 'Books', 'Furniture', 'Toys']
+        for type_name in product_types:
+            ProductType.objects.get_or_create(type_name=type_name)
+
+        # Create fake colors
+        colors = ['Red', 'Blue', 'Green', 'Black', 'White']
+        for color_name in colors:
+            Color.objects.get_or_create(color_name=color_name)
+
+        # Create fake sizes
+        sizes = ['S', 'M', 'L', 'XL']
+        for size_name in sizes:
+            Size.objects.get_or_create(size_name=size_name)
+
+        # Generate fake products
+        for _ in range(10):  # 10 products
+            product_type = ProductType.objects.order_by('?').first()
+            product_name = fake.word()
+            product_description = fake.sentence()
+            product_price = round(fake.random_number(digits=3) + fake.random_number(digits=2) / 100, 2)
+
+            product = Product.objects.create(
+                name=product_name,
+                description=product_description,
+                price=product_price,
+                type=product_type
+            )
+
+            # Generate fake product images
+            for _ in range(3):  # 3 images per product
+                ProductImage.objects.create(
+                    product=product,
+                    image_url=f"https://example.com/{fake.uuid4()}.jpg"
+                )
+
+            # Generate fake inventory for different colors and sizes
+            for color in Color.objects.all():
+                for size in Size.objects.all():
+                    quantity = fake.random_int(min=0, max=100)
+                    Inventory.objects.create(
+                        product=product,
+                        color=color,
+                        size=size,
+                        quantity=quantity
+                    )
+
+        self.stdout.write(self.style.SUCCESS('Successfully generated 10 fake products'))
+
+
+================================================================================================
+
+在您的 Django 專案中，將上述程式放入一個 management/commands 目錄下（例如 myapp/management/commands/generate_fake_data.py）。
+# python manage.py generate_fake_data
+
+
+
+
+
+
+
+
+
+

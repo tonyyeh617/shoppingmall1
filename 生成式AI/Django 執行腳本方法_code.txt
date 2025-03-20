@@ -1,0 +1,13 @@
+from django.core.management.base import BaseCommand
+from myapp.models import YourModel  # 替換為你的模型名稱和應用名稱
+
+class Command(BaseCommand):
+    help = '描述此命令的用途，例如處理某些數據'
+
+    def handle(self, *args, **kwargs):
+        # 在這裡添加你的邏輯
+        print("執行 add1 命令...")
+        # 假設你有一個模型 YourModel，這裡是一些示例代碼：
+        data = YourModel.objects.all()
+        for item in data:
+            print(item)
