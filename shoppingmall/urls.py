@@ -28,4 +28,4 @@ urlpatterns = [
 
     path('search/', views.search_results, name='search_results'),
     
-]+ static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
