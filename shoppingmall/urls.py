@@ -28,6 +28,7 @@ urlpatterns = [
 
     path('search/', views.search_results, name='search_results'),
     
-]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+#+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 #https://render.com/docs/deploy-django?_gl=1*7io44p*_gcl_au*MTExMjkxODU2OS4xNzQyNDU5NTM5*_ga*MTU0MDE5NDgzMy4xNzQyNDM1NTA3*_ga_QK9L9QJC5N*MTc0MjQ1OTUzOC4yLjEuMTc0MjQ2MjE0My40MS4wLjA.#static-files
